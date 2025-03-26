@@ -67,6 +67,7 @@ class BookingWorkflow:
         result = self.graph.invoke(initial_state)
         
         output  = State(**result)
+        
         # Get the last message from the dictionary result
         last_message = output.messages[-1]
         
