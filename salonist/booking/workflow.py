@@ -1,14 +1,12 @@
 from typing import Any, Dict, Tuple
-from langgraph.graph import StateGraph
+from langgraph.graph import StateGraph, END
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, AIMessage
 from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.checkpoint.memory import MemorySaver
 
-from pydantic.v1 import SecretStr
 import time
 
-from salonist.config import settings
 from salonist.booking.state import State
 from salonist.booking.tool import tool
 
@@ -56,6 +54,7 @@ class BookingWorkflow:
         # Any time a tool is called, we return to the chatbot to decide the next step
         graph_builder.add_edge("tools", "chatbot")
         graph_builder.set_entry_point("chatbot")
+        graph_builder.add_edge("chatbot", END)
         return graph_builder.compile(checkpointer=self.memory)
     
     def run(self, query: str, user_id: str) -> Tuple[str, float]:
