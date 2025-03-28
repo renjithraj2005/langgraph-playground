@@ -1,5 +1,6 @@
 from typing import List, Dict, Any
 from datetime import datetime, timedelta
+from langchain_community.tools.tavily_search import TavilySearchResults
 
 class BookingTool:
     """Tool for checking and managing appointment availability."""
@@ -95,3 +96,6 @@ class BookingTool:
                 "confirmation_code": f"BOOK-{hash(date_str + time_str) % 10000:04d}"
             }
         }
+
+tool = TavilySearchResults(max_results=2)
+

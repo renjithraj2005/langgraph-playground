@@ -2,22 +2,28 @@ from typing import Any, Dict, Tuple
 from langgraph.graph import StateGraph
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, AIMessage
+from langgraph.prebuilt import ToolNode, tools_condition
+from langgraph.checkpoint.memory import MemorySaver
+
 from pydantic.v1 import SecretStr
 import time
 
 from salonist.config import settings
 from salonist.booking.state import State
+from salonist.booking.tool import tool
 
 class BookingWorkflow:
     """A class to manage the booking agent workflow."""
     
     def __init__(self):
         """Initialize the workflow with required clients."""
+        print(settings.ANTHROPIC_API_KEY,"keyy----")
         self.llm = ChatAnthropic(
             model_name="claude-3-5-sonnet-20240620",
-            api_key=SecretStr(settings.ANTHROPIC_API_KEY),
-            timeout=30
         )
+        tools = [tool]
+        self.llm_with_tools = self.llm.bind_tools(tools)
+        self.memory = MemorySaver()
         self.graph = self._create_graph()
     
     def chatbot(self, state: State) -> Dict[str, list]:
@@ -29,7 +35,7 @@ class BookingWorkflow:
         Returns:
             Dictionary with messages list
         """
-        response = self.llm.invoke(state.messages)
+        response = self.llm_with_tools.invoke(state.messages)
         return {"messages": [response]}
     
     def _create_graph(self) -> Any:
@@ -39,15 +45,19 @@ class BookingWorkflow:
             Configured and compiled workflow graph
         """
         graph_builder = StateGraph(State)
-        
-        # Add the chatbot node
         graph_builder.add_node("chatbot", self.chatbot)
-        
-        # Set entry and finish points
+
+        tool_node = ToolNode(tools=[tool])
+        graph_builder.add_node("tools", tool_node)
+
+        graph_builder.add_conditional_edges(
+            "chatbot",
+            tools_condition,
+        )
+        # Any time a tool is called, we return to the chatbot to decide the next step
+        graph_builder.add_edge("tools", "chatbot")
         graph_builder.set_entry_point("chatbot")
-        graph_builder.set_finish_point("chatbot")
-        
-        return graph_builder.compile()
+        return graph_builder.compile(checkpointer=self.memory)
     
     def run(self, query: str) -> Tuple[str, float]:
         """Run the booking workflow with a given query.

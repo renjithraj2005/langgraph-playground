@@ -25,8 +25,6 @@ class SearchWorkflow:
         """Initialize the workflow with required clients."""
         self.llm = ChatAnthropic(
             model_name="claude-3-5-sonnet-20240620",
-            api_key=SecretStr(settings.ANTHROPIC_API_KEY),
-            timeout=30
         )
         self.tavily_client = TavilyClient(api_key=settings.TAVILY_API_KEY)
         self.graph = self._create_graph()
