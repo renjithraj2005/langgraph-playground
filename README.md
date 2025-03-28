@@ -36,6 +36,10 @@ cp .env.example .env
 ```bash
 # Run the application
 make run
+
+# Visualize the workflow graph
+make visualize
+# This creates a PNG visualization in the output/ directory
 ```
 
 Visit `http://localhost:8000/docs` to view the API documentation.
