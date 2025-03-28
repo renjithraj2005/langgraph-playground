@@ -39,7 +39,7 @@ class Booking(Resource):
                 return {'error': 'Query is required'}, 400
 
             # Run the workflow
-            response, processing_time = self.workflow.run(query)
+            response, processing_time = self.workflow.run(query, 2)
 
             return {
                 'response': response,

@@ -17,7 +17,6 @@ class BookingWorkflow:
     
     def __init__(self):
         """Initialize the workflow with required clients."""
-        print(settings.ANTHROPIC_API_KEY,"keyy----")
         self.llm = ChatAnthropic(
             model_name="claude-3-5-sonnet-20240620",
         )
@@ -59,7 +58,7 @@ class BookingWorkflow:
         graph_builder.set_entry_point("chatbot")
         return graph_builder.compile(checkpointer=self.memory)
     
-    def run(self, query: str) -> Tuple[str, float]:
+    def run(self, query: str, user_id: str) -> Tuple[str, float]:
         """Run the booking workflow with a given query.
         
         Args:
@@ -74,7 +73,7 @@ class BookingWorkflow:
         initial_state = {"messages": [HumanMessage(content=query)]}
         
         # Run the workflow
-        result = self.graph.invoke(initial_state)
+        result = self.graph.invoke(initial_state,{"configurable": {"thread_id": user_id}},)
         
         output  = State(**result)
         
