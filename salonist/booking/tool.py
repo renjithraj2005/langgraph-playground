@@ -1,12 +1,25 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
-from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain.tools import BaseTool
+from pydantic import PrivateAttr
 
-class BookingTool:
+class AvailabilityTool(BaseTool):
     """Tool for checking and managing appointment availability."""
     
-    def __init__(self):
+    name: str = "check_availability"
+    description: str = """Use this tool to check appointment availability.
+    Input can be:
+    - A specific date in YYYY-MM-DD format (e.g., "2024-03-28")
+    - "today" for today's availability
+    - "tomorrow" for tomorrow's availability
+    - "next_week" for availability next week
+    Returns available time slots for that date."""
+    
+    _availability: Dict[str, List[str]] = PrivateAttr(default_factory=dict)
+    
+    def __init__(self, **data):
         """Initialize the booking tool with hardcoded data."""
+        super().__init__(**data)
         # Generate some hardcoded availability for the next 7 days
         self._availability = self._generate_hardcoded_availability()
     
@@ -41,61 +54,52 @@ class BookingTool:
         
         return availability
     
-    def get_available_dates(self) -> List[str]:
-        """Get a list of dates with available slots."""
-        return list(self._availability.keys())
-    
-    def get_available_slots(self, date_str: str) -> List[str]:
-        """Get available time slots for a specific date.
+    def _get_date_for_query(self, query: str) -> str:
+        """Convert relative date queries to actual dates.
         
         Args:
-            date_str: Date string in YYYY-MM-DD format
+            query: Date string or relative date query
             
         Returns:
-            List of available time slots in HH:MM format
+            Date string in YYYY-MM-DD format
         """
-        return self._availability.get(date_str, [])
+        today = datetime.now()
+        
+        if query == "today":
+            return today.strftime("%Y-%m-%d")
+        elif query == "tomorrow":
+            tomorrow = today + timedelta(days=1)
+            return tomorrow.strftime("%Y-%m-%d")
+        elif query == "next_week":
+            next_week = today + timedelta(days=7)
+            return next_week.strftime("%Y-%m-%d")
+        else:
+            # Assume it's a YYYY-MM-DD format date
+            return query
     
-    def check_availability(self, date_str: str, time_str: str) -> bool:
-        """Check if a specific date and time slot is available.
+    def _run(self, query: str) -> str:
+        """Check availability for a specific date.
         
         Args:
-            date_str: Date string in YYYY-MM-DD format
-            time_str: Time string in HH:MM format
+            query: Date string or relative date query
             
         Returns:
-            True if the slot is available, False otherwise
+            String containing available time slots
         """
-        slots = self._availability.get(date_str, [])
-        return time_str in slots
+        date_str = self._get_date_for_query(query)
+        
+        if date_str not in self._availability:
+            return f"No availability found for date {date_str}"
+        
+        slots = self._availability[date_str]
+        if not slots:
+            return f"No available slots for date {date_str}"
+        
+        return f"Available slots for {date_str}: {', '.join(slots)}"
     
-    def book_appointment(self, date_str: str, time_str: str) -> Dict[str, Any]:
-        """Book an appointment at the specified date and time.
-        
-        Args:
-            date_str: Date string in YYYY-MM-DD format
-            time_str: Time string in HH:MM format
-            
-        Returns:
-            Appointment details or error message
-        """
-        if not self.check_availability(date_str, time_str):
-            return {
-                "success": False,
-                "message": f"The slot at {date_str} {time_str} is not available."
-            }
-        
-        # Remove the slot from availability to simulate booking
-        self._availability[date_str].remove(time_str)
-        
-        return {
-            "success": True,
-            "appointment": {
-                "date": date_str,
-                "time": time_str,
-                "confirmation_code": f"BOOK-{hash(date_str + time_str) % 10000:04d}"
-            }
-        }
+    def _arun(self, query: str) -> str:
+        """Async version of _run."""
+        raise NotImplementedError("Async version not implemented")
 
-tool = TavilySearchResults(max_results=2)
+tool = AvailabilityTool()
 

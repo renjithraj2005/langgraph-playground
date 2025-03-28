@@ -1,7 +1,7 @@
 from typing import Any, Dict, Tuple
 from langgraph.graph import StateGraph, END
 from langchain_anthropic import ChatAnthropic
-from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.checkpoint.memory import MemorySaver
 
@@ -9,6 +9,7 @@ import time
 
 from salonist.booking.state import State
 from salonist.booking.tool import tool
+from salonist.booking.prompts import BOOKING_SYSTEM_PROMPT
 
 class BookingWorkflow:
     """A class to manage the booking agent workflow."""
@@ -62,19 +63,25 @@ class BookingWorkflow:
         
         Args:
             query: The user's query to process
+            user_id: Unique identifier for the user's session
             
         Returns:
             Tuple of (response, processing_time)
         """
         start_time = time.time()
         
-        # Create initial state as dictionary
-        initial_state = {"messages": [HumanMessage(content=query)]}
+        # Create initial state with system prompt and user query
+        initial_state = {
+            "messages": [
+                SystemMessage(content=BOOKING_SYSTEM_PROMPT),
+                HumanMessage(content=query)
+            ]
+        }
         
-        # Run the workflow
-        result = self.graph.invoke(initial_state,{"configurable": {"thread_id": user_id}},)
+        # Run the workflow with thread_id for memory management
+        result = self.graph.invoke(initial_state, {"configurable": {"thread_id": user_id}})
         
-        output  = State(**result)
+        output = State(**result)
         
         # Get the last message from the dictionary result
         last_message = output.messages[-1]
