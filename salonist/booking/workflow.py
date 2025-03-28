@@ -19,7 +19,7 @@ class BookingWorkflow:
         """Initialize the workflow with required clients."""
         self.llm = ChatAnthropic(
             model_name="claude-3-5-sonnet-20240620",
-        )
+        ) # type: ignore
         tools = [tool]
         self.llm_with_tools = self.llm.bind_tools(tools)
         self.memory = MemorySaver()
