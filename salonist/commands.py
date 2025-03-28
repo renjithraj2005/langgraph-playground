@@ -2,6 +2,9 @@ import click
 from flask.cli import with_appcontext
 from .database import db
 from .models import Service, Policy
+from .booking.workflow import BookingWorkflow
+from langgraph.graph import StateGraph
+import os
 
 @click.command('clean-db')
 @with_appcontext
@@ -84,4 +87,30 @@ def list_services():
         if policies:
             click.echo('Policies:')
             for policy in policies:
-                click.echo(f'  - {policy.name} (₹{policy.premium:.2f}/year, Coverage: ₹{policy.coverage_amount:.2f})') 
+                click.echo(f'  - {policy.name} (₹{policy.premium:.2f}/year, Coverage: ₹{policy.coverage_amount:.2f})')
+
+@click.command('visualize-graph')
+def visualize_graph():
+    """Visualize the booking workflow graph."""
+    try:
+        click.echo("Creating workflow instance...")
+        workflow = BookingWorkflow()
+        graph = workflow.graph
+        
+        click.echo("Creating output directory...")
+        os.makedirs('output', exist_ok=True)
+        output_path = 'output/workflow_graph.png'
+        
+        click.echo("Generating visualization...")
+        # Get PNG bytes
+        png_bytes = graph.get_graph().draw_mermaid_png()
+        
+        # Save to file
+        with open(output_path, 'wb') as f:
+            f.write(png_bytes)
+            
+        click.echo(f"Graph visualization saved to {output_path}")
+    except Exception as e:
+        click.echo(f"Error visualizing graph: {str(e)}")
+        import traceback
+        click.echo(traceback.format_exc())

@@ -1,5 +1,6 @@
 from typing import Any, Dict, Tuple
 from langgraph.graph import StateGraph, END
+from langgraph.graph.state import CompiledStateGraph
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langgraph.prebuilt import ToolNode, tools_condition
@@ -23,7 +24,7 @@ class BookingWorkflow:
         self.llm_with_tools = self.llm.bind_tools(tools)
         self.memory = MemorySaver()
         self.graph = self._create_graph()
-    
+
     def chatbot(self, state: State) -> Dict[str, list]:
         """Process messages using the LLM.
         
@@ -36,7 +37,7 @@ class BookingWorkflow:
         response = self.llm_with_tools.invoke(state.messages)
         return {"messages": [response]}
     
-    def _create_graph(self) -> Any:
+    def _create_graph(self) -> CompiledStateGraph:
         """Create and configure the workflow graph.
         
         Returns:

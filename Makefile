@@ -19,6 +19,10 @@ dev:
 search:
 	PYTHONDONTWRITEBYTECODE=1 poetry run python -m salonist.cli search "$(filter-out $@,$(MAKECMDGOALS))"
 
+# Visualize the workflow graph
+visualize:
+	PYTHONDONTWRITEBYTECODE=1 poetry run flask visualize-graph
+
 # Clean up Python cache files
 clean:
 	find . -type d -name "__pycache__" -exec rm -r {} +

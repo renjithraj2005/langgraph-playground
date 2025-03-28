@@ -1,11 +1,14 @@
 from typing import Optional
 from pydantic_settings import BaseSettings
-from pydantic import Field
+from pydantic import Field, SecretStr
 from functools import lru_cache
 from pathlib import Path
+import os
 
 
 class Settings(BaseSettings):
+    """Application settings."""
+    
     # Python Settings
     PYTHONDONTWRITEBYTECODE: str = Field(default="1", description="Disable Python bytecode generation")
     
@@ -22,11 +25,11 @@ class Settings(BaseSettings):
     DATABASE_URL: Optional[str] = Field(default=None, description="Database connection URL")
     
     # Security Settings
-    SECRET_KEY: str = Field(default="your-secret-key-here", description="Application secret key")
+    SECRET_KEY: SecretStr = SecretStr(os.urandom(24).hex())
     
     # API Keys
     ANTHROPIC_API_KEY: str = Field(default="", description="Anthropic API key")
-    TAVILY_API_KEY: str = Field(default="", description="Tavily API key")
+    TAVILY_API_KEY: Optional[SecretStr] = None
     
     # Database
     SQLALCHEMY_DATABASE_URI: str = Field(default="sqlite:///salonist.db", description="Database connection URL")
@@ -35,6 +38,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "allow"  # Allow extra fields like FLASK_APP
 
 
 @lru_cache()
