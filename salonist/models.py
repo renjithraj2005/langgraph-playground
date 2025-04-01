@@ -11,8 +11,8 @@ class Service(db.Model):
     price = db.Column(db.Float, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relationship with policies
-    policies = db.relationship('Policy', back_populates='service', lazy='dynamic')
+    # Relationship with packages
+    packages = db.relationship('Package', back_populates='service', lazy='dynamic')
     
     def __init__(self, name: str, duration: int, price: float):
         self.name = name
@@ -22,9 +22,9 @@ class Service(db.Model):
     def __repr__(self):
         return f'<Service {self.name}>'
 
-class Policy(db.Model):
-    """Insurance policy model."""
-    __tablename__ = 'policies'
+class Package(db.Model):
+    """Service package model."""
+    __tablename__ = 'packages'
     
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -35,10 +35,10 @@ class Policy(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationship with service
-    service = db.relationship('Service', back_populates='policies')
+    service = db.relationship('Service', back_populates='packages')
     
     def __repr__(self):
-        return f'<Policy {self.name}>'
+        return f'<Package {self.name}>'
 
 class ServiceRequest(db.Model):
     """Model to store user service inquiries."""
@@ -48,12 +48,12 @@ class ServiceRequest(db.Model):
     user_name = db.Column(db.String(100), nullable=False)
     phone_number = db.Column(db.String(20), nullable=False)
     service_id = db.Column(db.Integer, db.ForeignKey('services.id'), nullable=False)
-    policy_id = db.Column(db.Integer, db.ForeignKey('policies.id'), nullable=False)
+    package_id = db.Column(db.Integer, db.ForeignKey('packages.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
     service = db.relationship('Service')
-    policy = db.relationship('Policy')
+    package = db.relationship('Package')
     
     def __repr__(self):
         return f'<ServiceRequest {self.user_name} - {self.service.name}>' 

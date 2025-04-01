@@ -1,7 +1,7 @@
 import click
 from flask.cli import with_appcontext
 from .database import db
-from .models import Service, Policy
+from .models import Service, Package
 from .booking.workflow import BookingWorkflow
 from langgraph.graph import StateGraph
 import os
@@ -11,7 +11,7 @@ import os
 def clean_db():
     """Remove all data from the database."""
     try:
-        Policy.query.delete()
+        Package.query.delete()
         Service.query.delete()
         db.session.commit()
         click.echo('Successfully cleaned the database.')
@@ -22,52 +22,80 @@ def clean_db():
 @click.command('seed-db')
 @with_appcontext
 def seed_db():
-    """Seed the database with initial data."""
+    """Seed the database with initial salon data."""
     try:
         # Create services
-        health_insurance = Service(**{'name': 'Health Insurance'})
-        vehicle_insurance = Service(**{'name': 'Vehicle Insurance'})
+        haircut = Service(
+            name='Haircut',
+            duration=30,
+            price=25.0
+        )
+        hair_coloring = Service(
+            name='Hair Coloring',
+            duration=120,
+            price=100.0
+        )
+        facial = Service(
+            name='Facial',
+            duration=60,
+            price=70.0
+        )
+        manicure = Service(
+            name='Manicure',
+            duration=45,
+            price=35.0
+        )
+        pedicure = Service(
+            name='Pedicure',
+            duration=60,
+            price=45.0
+        )
         
-        db.session.add_all([health_insurance, vehicle_insurance])
+        db.session.add_all([haircut, hair_coloring, facial, manicure, pedicure])
         db.session.flush()  # This will assign IDs to services
         
-        # Create policies
-        policies = [
-            Policy(**{
-                'name': 'Basic Health Cover',
-                'description': 'Basic health insurance coverage for individuals',
-                'coverage_amount': 100000.00,
-                'premium': 5000.00,
-                'service_id': health_insurance.id
+        # Create packages
+        packages = [
+            Package(**{
+                'name': 'Basic Hair Care Package',
+                'description': 'Basic haircut and styling',
+                'coverage_amount': 25.0,
+                'premium': 25.0,
+                'service_id': haircut.id
             }),
-            Policy(**{
-                'name': 'Premium Health Cover',
-                'description': 'Comprehensive health insurance with additional benefits',
-                'coverage_amount': 500000.00,
-                'premium': 15000.00,
-                'service_id': health_insurance.id
+            Package(**{
+                'name': 'Premium Hair Care Package',
+                'description': 'Haircut, coloring, and styling',
+                'coverage_amount': 125.0,
+                'premium': 125.0,
+                'service_id': hair_coloring.id
             }),
-            Policy(**{
-                'name': 'Third Party Vehicle Insurance',
-                'description': 'Basic vehicle insurance covering third party damages',
-                'coverage_amount': 50000.00,
-                'premium': 2000.00,
-                'service_id': vehicle_insurance.id
+            Package(**{
+                'name': 'Facial Treatment Package',
+                'description': 'Complete facial treatment with cleansing and massage',
+                'coverage_amount': 70.0,
+                'premium': 70.0,
+                'service_id': facial.id
             }),
-            Policy(**{
-                'name': 'Comprehensive Vehicle Insurance',
-                'description': 'Full coverage vehicle insurance including own damages',
-                'coverage_amount': 200000.00,
-                'premium': 8000.00,
-                'service_id': vehicle_insurance.id
+            Package(**{
+                'name': 'Hand & Foot Care Package',
+                'description': 'Manicure and pedicure treatment',
+                'coverage_amount': 80.0,
+                'premium': 80.0,
+                'service_id': manicure.id
+            }),
+            Package(**{
+                'name': 'Luxury Spa Package',
+                'description': 'Complete spa experience including all services',
+                'coverage_amount': 275.0,
+                'premium': 275.0,
+                'service_id': facial.id
             })
         ]
         
-        # Add to session and commit
-        db.session.bulk_save_objects(policies)
+        db.session.add_all(packages)
         db.session.commit()
-        
-        click.echo('Successfully added insurance services and policies to database.')
+        click.echo('Successfully seeded the database with salon services and packages.')
     except Exception as e:
         db.session.rollback()
         click.echo(f'Error seeding database: {str(e)}')
@@ -83,11 +111,11 @@ def list_services():
     
     for service in services:
         click.echo(f'\nService - ID: {service.id}, Name: {service.name}')
-        policies = service.policies.all()
-        if policies:
-            click.echo('Policies:')
-            for policy in policies:
-                click.echo(f'  - {policy.name} (₹{policy.premium:.2f}/year, Coverage: ₹{policy.coverage_amount:.2f})')
+        packages = service.packages.all()
+        if packages:
+            click.echo('Packages:')
+            for package in packages:
+                click.echo(f'  - {package.name} (₹{package.premium:.2f}, Duration: {service.duration} minutes)')
 
 @click.command('visualize-graph')
 def visualize_graph():

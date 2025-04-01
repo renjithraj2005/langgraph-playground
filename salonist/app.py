@@ -1,11 +1,10 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_cors import CORS
 from salonist.config import get_settings
 from salonist.api import init_api
+from salonist.database import db
 
-db = SQLAlchemy()
 migrate = Migrate()
 
 def create_app(config_class=None):
