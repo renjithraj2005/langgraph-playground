@@ -3,7 +3,7 @@ from flask.cli import with_appcontext
 from .database import db
 from .models import Service, Package
 from .booking.workflow import BookingWorkflow
-from .agent.graph import graph as agent_graph
+from .agent.graph import AgentGraph
 import os
 
 @click.command('clean-db')
@@ -156,7 +156,8 @@ def visualize_agent():
 
         click.echo("Generating visualization...")
         # Get PNG bytes
-        png_bytes = agent_graph.get_graph().draw_mermaid_png()
+        graph =  AgentGraph()
+        png_bytes = graph.graph.get_graph().draw_mermaid_png()
 
         # Save to file
         with open(output_path, 'wb') as f:

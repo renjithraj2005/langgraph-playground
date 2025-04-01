@@ -1,5 +1,5 @@
 from flask_restx import Resource, Namespace, fields
-from salonist.agent.graph import run
+from salonist.agent.graph import AgentGraph
 
 # Create namespace
 ns = Namespace('multi-agent', description='Multi-agent operations')
@@ -21,6 +21,7 @@ class MultiAgent(Resource):
     """Multi-agent endpoint for handling multi-agent queries."""
     
     def __init__(self, *args, **kwargs):
+        self.agent = AgentGraph()
         super().__init__(*args, **kwargs)
 
     @ns.expect(multi_agent_input)
@@ -37,13 +38,10 @@ class MultiAgent(Resource):
                 return {'error': 'Query is required'}, 400
 
             # Run the workflow
-            response, processing_time = run(query)
+            response = self.agent.run(query)
 
             return {
                 'response': response,
-                'metadata': {
-                    'processing_time': processing_time
-                }
             }, 200
             
         except Exception as e:
