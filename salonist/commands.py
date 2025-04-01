@@ -3,7 +3,7 @@ from flask.cli import with_appcontext
 from .database import db
 from .models import Service, Package
 from .booking.workflow import BookingWorkflow
-from langgraph.graph import StateGraph
+from .agent.graph import graph as agent_graph
 import os
 
 @click.command('clean-db')
@@ -137,6 +137,31 @@ def visualize_graph():
         with open(output_path, 'wb') as f:
             f.write(png_bytes)
             
+        click.echo(f"Graph visualization saved to {output_path}")
+    except Exception as e:
+        click.echo(f"Error visualizing graph: {str(e)}")
+        import traceback
+        click.echo(traceback.format_exc())
+
+
+@click.command('visualize-agent')
+def visualize_agent():
+    """Visualize the booking workflow graph."""
+    try:
+        click.echo("Creating workflow instance...")
+
+        click.echo("Creating output directory...")
+        os.makedirs('output', exist_ok=True)
+        output_path = 'output/agent_workflow_graph.png'
+
+        click.echo("Generating visualization...")
+        # Get PNG bytes
+        png_bytes = agent_graph.get_graph().draw_mermaid_png()
+
+        # Save to file
+        with open(output_path, 'wb') as f:
+            f.write(png_bytes)
+
         click.echo(f"Graph visualization saved to {output_path}")
     except Exception as e:
         click.echo(f"Error visualizing graph: {str(e)}")

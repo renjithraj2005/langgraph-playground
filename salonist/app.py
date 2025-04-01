@@ -22,10 +22,11 @@ def create_app(config_class=None):
     api = init_api(app)
     
     # Register CLI commands
-    from salonist.commands import seed_db, list_services, clean_db, visualize_graph
+    from salonist.commands import seed_db, list_services, clean_db, visualize_graph, visualize_agent
     app.cli.add_command(seed_db)
     app.cli.add_command(list_services)
     app.cli.add_command(clean_db)
     app.cli.add_command(visualize_graph)
+    app.cli.add_command(visualize_agent)
     
     return app 

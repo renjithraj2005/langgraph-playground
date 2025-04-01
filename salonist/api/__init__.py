@@ -2,6 +2,7 @@ from flask import Flask
 from flask_restx import Api
 from .routes.search import ns as search_ns
 from .routes.booking import ns as booking_ns
+from .routes.multi_agent import ns as multi_agent_ns
 
 def init_api(app: Flask):
     """Initialize the API with all routes."""
@@ -23,5 +24,6 @@ def init_api(app: Flask):
     # Add namespaces
     api.add_namespace(search_ns, path='/api/search')
     api.add_namespace(booking_ns, path='/api/booking')
+    api.add_namespace(multi_agent_ns, path="/api/multi-agent")
     
     return api 
