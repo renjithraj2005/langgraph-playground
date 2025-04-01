@@ -7,10 +7,17 @@ class Service(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
+    duration = db.Column(db.Integer, nullable=False)  # Duration in minutes
+    price = db.Column(db.Float, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationship with policies
     policies = db.relationship('Policy', back_populates='service', lazy='dynamic')
+    
+    def __init__(self, name: str, duration: int, price: float):
+        self.name = name
+        self.duration = duration
+        self.price = price
     
     def __repr__(self):
         return f'<Service {self.name}>'
