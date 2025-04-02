@@ -2,9 +2,10 @@ from typing import Literal
 from typing_extensions import TypedDict
 
 from langchain_anthropic import ChatAnthropic
-from langgraph.graph import MessagesState, END
+from langgraph.graph import END
 from langgraph.types import Command
 
+from state import State
 
 members = ["researcher", "coder"]
 # Our team supervisor is an LLM node. It just picks the next agent to process
@@ -27,10 +28,6 @@ class Router(TypedDict):
 
 
 llm = ChatAnthropic(model="claude-3-5-sonnet-latest")
-
-
-class State(MessagesState):
-    next: str
 
 
 def supervisor_node(state: State) -> Command[Literal[*members, "__end__"]]:
