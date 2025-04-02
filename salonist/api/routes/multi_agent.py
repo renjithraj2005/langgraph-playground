@@ -1,3 +1,5 @@
+import logging
+
 from flask_restx import Resource, Namespace, fields
 from salonist.agent.graph import AgentGraph
 
@@ -37,11 +39,14 @@ class MultiAgent(Resource):
             if not query:
                 return {'error': 'Query is required'}, 400
 
+            thread_id = 1234
+
             # Run the workflow
-            response = self.agent.run(query)
+            message, dialog_state = self.agent.run_workflow(query, thread_id)
 
             return {
-                'response': response,
+                'response': message,
+                'dialog_state' : dialog_state
             }, 200
             
         except Exception as e:
