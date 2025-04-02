@@ -5,7 +5,7 @@ from langchain_anthropic import ChatAnthropic
 from langgraph.graph import END
 from langgraph.types import Command
 
-from state import State
+from .state import State
 
 members = ["researcher", "coder"]
 # Our team supervisor is an LLM node. It just picks the next agent to process
