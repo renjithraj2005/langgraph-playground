@@ -1,7 +1,3 @@
-import logging
-
-from typing import Tuple
-
 from langchain_core.messages import HumanMessage
 from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import create_react_agent
@@ -55,21 +51,6 @@ class AgentGraph:
         builder.add_node("researcher", self._research_node)
         builder.add_node("coder", self._code_node)
         return builder.compile()
-
-    def run_workflow(self, query: str, thread_id: int) -> Tuple[str, str]:
-        logging.info(f'Received the Query - {query} & thread_id - {thread_id}')
-        inputs = [
-            HumanMessage(content=query)
-        ]
-        state = {'messages': inputs}
-        config = {"configurable": {"thread_id": thread_id, "recursion_limit": 10}}
-        response = self.graph.invoke(input=state, config=config)
-
-        logging.info('Generated Answer from Graph')
-        dialog_states = response['dialog_state']
-        dialog_state = dialog_states[-1] if dialog_states else 'primary_assistant'
-        messages = response['messages'][-1].content
-        return str(messages), dialog_state
 
     def run(self, query: str) -> str:
         """Run the booking workflow with a given query.

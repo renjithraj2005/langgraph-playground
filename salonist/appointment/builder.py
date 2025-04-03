@@ -1,9 +1,13 @@
-import os
+import logging
+
+from typing import Tuple
 from langgraph.graph import StateGraph
-from .state import State
-from .base import Assistant
+from langchain_core.messages import HumanMessage
 from langgraph.graph import START, END
 from langchain_anthropic import ChatAnthropic
+
+from .state import State
+from .base import Assistant
 from .agents import get_runnable
 from .prompts import info_agent_prompt, booking_agent_prompt, primary_agent_prompt
 from .tools.tools import (set_appointment,
@@ -124,3 +128,18 @@ def build_graph():
     )
 
     return graph
+
+def run_workflow(self, query: str, thread_id: int) -> Tuple[str, str]:
+    logging.info(f'Received the Query - {query} & thread_id - {thread_id}')
+    inputs = [
+        HumanMessage(content=query)
+    ]
+    state = {'messages': inputs}
+    config = {"configurable": {"thread_id": thread_id, "recursion_limit": 10}}
+    response = build_graph().invoke(input=state, config=config)
+
+    logging.info('Generated Answer from Graph')
+    dialog_states = response['dialog_state']
+    dialog_state = dialog_states[-1] if dialog_states else 'primary_assistant'
+    messages = response['messages'][-1].content
+    return str(messages), dialog_state

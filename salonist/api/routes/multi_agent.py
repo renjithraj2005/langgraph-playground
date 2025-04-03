@@ -1,7 +1,5 @@
-import logging
-
 from flask_restx import Resource, Namespace, fields
-from salonist.agent.graph import AgentGraph
+from salonist.appointment.builder import run_workflow
 
 # Create namespace
 ns = Namespace('multi-agent', description='Multi-agent operations')
@@ -23,7 +21,6 @@ class MultiAgent(Resource):
     """Multi-agent endpoint for handling multi-agent queries."""
     
     def __init__(self, *args, **kwargs):
-        self.agent = AgentGraph()
         super().__init__(*args, **kwargs)
 
     @ns.expect(multi_agent_input)
@@ -42,7 +39,7 @@ class MultiAgent(Resource):
             thread_id = 1234
 
             # Run the workflow
-            message, dialog_state = self.agent.run_workflow(query, thread_id)
+            message, dialog_state = run_workflow(query, thread_id)
 
             return {
                 'response': message,
