@@ -129,7 +129,7 @@ def build_graph():
 
     return graph
 
-def run_workflow(self, query: str, thread_id: int) -> Tuple[str, str]:
+def run_workflow(query: str, thread_id: int) -> Tuple[str, str]:
     logging.info(f'Received the Query - {query} & thread_id - {thread_id}')
     inputs = [
         HumanMessage(content=query)
