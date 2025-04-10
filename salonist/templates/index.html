@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salonist Chat</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f5f5f5;
+        }
+        .chat-container {
+            width: 90%;
+            max-width: 600px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 80vh;
+        }
+        .chat-header {
+            background-color: #4a6fa5;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            margin-bottom: 15px;
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 18px;
+            word-wrap: break-word;
+        }
+        .user-message {
+            align-self: flex-end;
+            background-color: #4a6fa5;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+        .bot-message {
+            align-self: flex-start;
+            background-color: #e9ecef;
+            color: #212529;
+            border-bottom-left-radius: 5px;
+        }
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ced4da;
+            border-radius: 20px;
+            outline: none;
+            font-size: 1rem;
+        }
+        .chat-input button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            background-color: #4a6fa5;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s;
+        }
+        .chat-input button:hover {
+            background-color: #3a5a8c;
+        }
+        .chat-input button:disabled {
+            background-color: #a0a0a0;
+            cursor: not-allowed;
+        }
+        .typing-indicator {
+            display: none;
+            align-self: flex-start;
+            background-color: #e9ecef;
+            color: #212529;
+            padding: 10px 15px;
+            border-radius: 18px;
+            border-bottom-left-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #6c757d;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: typing 1s infinite;
+        }
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+            margin-right: 0;
+        }
+        @keyframes typing {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            Salonist Assistant
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="message bot-message">
+                Hello! I'm your Salonist Assistant. How can I help you today?
+            </div>
+            <div class="typing-indicator" id="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="user-input" placeholder="Type your message here..." autocomplete="off">
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatMessages = document.getElementById('chat-messages');
+            const userInput = document.getElementById('user-input');
+            const sendButton = document.getElementById('send-button');
+            const typingIndicator = document.getElementById('typing-indicator');
+
+            // Function to add a message to the chat
+            function addMessage(message, isUser) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message');
+                messageElement.classList.add(isUser ? 'user-message' : 'bot-message');
+                messageElement.textContent = message;
+                
+                // Insert before the typing indicator
+                chatMessages.insertBefore(messageElement, typingIndicator);
+                
+                // Scroll to the bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            // Function to show/hide typing indicator
+            function toggleTypingIndicator(show) {
+                typingIndicator.style.display = show ? 'block' : 'none';
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            // Function to send message to API
+            async function sendMessageToAPI(message) {
+                try {
+                    const response = await fetch('/api/multi-agent', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ query: message })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+
+                    const data = await response.json();
+                    return data.response || 'Sorry, I couldn\'t process your request.';
+                } catch (error) {
+                    console.error('Error:', error);
+                    return 'Sorry, there was an error processing your request.';
+                }
+            }
+
+            // Function to handle sending a message
+            async function sendMessage() {
+                const message = userInput.value.trim();
+                if (!message) return;
+
+                // Add user message to chat
+                addMessage(message, true);
+                
+                // Clear input
+                userInput.value = '';
+                
+                // Show typing indicator
+                toggleTypingIndicator(true);
+                
+                // Disable input and button while processing
+                userInput.disabled = true;
+                sendButton.disabled = true;
+                
+                // Get response from API
+                const response = await sendMessageToAPI(message);
+                
+                // Hide typing indicator
+                toggleTypingIndicator(false);
+                
+                // Add bot response to chat
+                addMessage(response, false);
+                
+                // Re-enable input and button
+                userInput.disabled = false;
+                sendButton.disabled = false;
+                userInput.focus();
+            }
+
+            // Event listeners
+            sendButton.addEventListener('click', sendMessage);
+            
+            userInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

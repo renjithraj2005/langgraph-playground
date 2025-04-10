@@ -25,5 +25,4 @@ def init_api(app: Flask):
     api.add_namespace(search_ns, path='/api/search')
     api.add_namespace(booking_ns, path='/api/booking')
     api.add_namespace(multi_agent_ns, path="/api/multi-agent")
-    
     return api 
