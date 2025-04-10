@@ -1,10 +1,12 @@
 import logging
-
+import sqlite3
 from typing import Tuple
+
 from langgraph.graph import StateGraph
 from langchain_core.messages import HumanMessage
 from langgraph.graph import START, END
 from langchain_anthropic import ChatAnthropic
+from langgraph.checkpoint.sqlite import SqliteSaver
 
 from .state import State
 from .base import Assistant
@@ -25,8 +27,6 @@ from .utils.helper import (
     route_primary_assistant,
     create_entry_node
 )
-from langgraph.checkpoint.sqlite import SqliteSaver
-import sqlite3
 
 conn = sqlite3.connect('checkpoints.db', check_same_thread=False)
 
